@@ -1,0 +1,6 @@
+/dist
+fix_dependencies.bat
+NubaidLockdown.spec
+package.bat
+PACKAGING.md
+password.hash

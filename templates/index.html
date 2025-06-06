@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nubaid Lockdown - Remote Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .status-container {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .status {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .locked {
+            color: #e74c3c;
+        }
+        .unlocked {
+            color: #2ecc71;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .action-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 45%;
+        }
+        .lock-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .unlock-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .section {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .list-container {
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .list-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        .add-form {
+            display: flex;
+            margin-top: 15px;
+        }
+        .add-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            font-size: 14px;
+        }
+        .add-btn {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .password-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        .password-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 400px;
+        }
+        .password-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .password-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        .password-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .confirm-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        .cancel-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .settings-btn {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .error-message {
+            color: #e74c3c;
+            margin: 10px 0;
+            text-align: center;
+            display: none;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 5px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .not-admin-warning {
+            background-color: #f39c12;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Nubaid Lockdown</h1>
+            <p>Remote Control Panel</p>
+        </header>
+
+        <div class="not-admin-warning" id="adminWarning">
+            ⚠️ Application not running as administrator. Some features may not work correctly.
+        </div>
+
+        <div class="status-container">
+            <h2>System Status</h2>
+            <div class="status" id="systemStatus">Loading...</div>
+            <div class="action-buttons">
+                <button class="action-button lock-btn" id="lockButton">Lock System</button>
+                <button class="action-button unlock-btn" id="unlockButton">Unlock System</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Blocked Applications</h2>
+            <div class="list-container" id="appsList">
+                <div class="list-item">Loading...</div>
+            </div>
+            <div class="add-form">
+                <input type="text" class="add-input" id="appInput" placeholder="Enter app name (e.g., chrome.exe)">
+                <button class="add-btn" id="addAppButton">Add</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Blocked Websites</h2>
+            <div class="list-container" id="sitesList">
+                <div class="list-item">Loading...</div>
+            </div>
+            <div class="add-form">
+                <input type="text" class="add-input" id="siteInput" placeholder="Enter website (e.g., facebook.com)">
+                <button class="add-btn" id="addSiteButton">Add</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Settings</h2>
+            <button class="settings-btn" id="changePasswordButton">Change Password</button>
+        </div>
+    </div>
+
+    <div class="password-dialog" id="passwordDialog">
+        <div class="password-box">
+            <h3 id="passwordDialogTitle">Enter Password</h3>
+            <div class="error-message" id="passwordError"></div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <input type="password" class="password-input" id="confirmPasswordInput" placeholder="Confirm password" style="display: none;">
+            <div class="password-buttons">
+                <button class="password-btn cancel-btn" id="cancelPasswordButton">Cancel</button>
+                <button class="password-btn confirm-btn" id="confirmPasswordButton">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isLocked = false;
+        let isAdmin = false;
+        let blockedApps = [];
+        let blockedSites = [];
+        let passwordAction = '';
+
+        // DOM elements
+        const systemStatus = document.getElementById('systemStatus');
+        const lockButton = document.getElementById('lockButton');
+        const unlockButton = document.getElementById('unlockButton');
+        const appsList = document.getElementById('appsList');
+        const sitesList = document.getElementById('sitesList');
+        const appInput = document.getElementById('appInput');
+        const siteInput = document.getElementById('siteInput');
+        const addAppButton = document.getElementById('addAppButton');
+        const addSiteButton = document.getElementById('addSiteButton');
+        const changePasswordButton = document.getElementById('changePasswordButton');
+        const passwordDialog = document.getElementById('passwordDialog');
+        const passwordDialogTitle = document.getElementById('passwordDialogTitle');
+        const passwordInput = document.getElementById('passwordInput');
+        const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+        const confirmPasswordButton = document.getElementById('confirmPasswordButton');
+        const cancelPasswordButton = document.getElementById('cancelPasswordButton');
+        const passwordError = document.getElementById('passwordError');
+        const adminWarning = document.getElementById('adminWarning');
+
+        // Initialize the application
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchStatus();
+            setupEventListeners();
+        });
+
+        // Set up event listeners
+        function setupEventListeners() {
+            lockButton.addEventListener('click', () => {
+                showPasswordDialog('lock');
+            });
+
+            unlockButton.addEventListener('click', () => {
+                showPasswordDialog('unlock');
+            });
+
+            addAppButton.addEventListener('click', () => {
+                const appName = appInput.value.trim();
+                if (appName) {
+                    showPasswordDialog('addApp', appName);
+                }
+            });
+
+            addSiteButton.addEventListener('click', () => {
+                const siteName = siteInput.value.trim();
+                if (siteName) {
+                    showPasswordDialog('addSite', siteName);
+                }
+            });
+
+            changePasswordButton.addEventListener('click', () => {
+                showPasswordDialog('changePassword');
+            });
+
+            confirmPasswordButton.addEventListener('click', handlePasswordConfirm);
+            cancelPasswordButton.addEventListener('click', hidePasswordDialog);
+        }
+
+        // Fetch system status
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                isLocked = data.is_locked;
+                blockedApps = data.blocked_apps;
+                blockedSites = data.blocked_sites;
+                isAdmin = data.is_admin;
+                
+                updateUI();
+            } catch (error) {
+                console.error('Error fetching status:', error);
+                systemStatus.textContent = 'Error connecting to server';
+                systemStatus.style.color = '#e74c3c';
+            }
+        }
+
+        // Update the user interface
+        function updateUI() {
+            // Update status
+            systemStatus.textContent = isLocked ? 'LOCKED' : 'UNLOCKED';
+            systemStatus.className = isLocked ? 'status locked' : 'status unlocked';
+            
+            // Update buttons
+            lockButton.disabled = isLocked;
+            unlockButton.disabled = !isLocked;
+            lockButton.classList.toggle('disabled', isLocked);
+            unlockButton.classList.toggle('disabled', !isLocked);
+            
+            // Show admin warning if needed
+            adminWarning.style.display = isAdmin ? 'none' : 'block';
+            
+            // Update apps list
+            appsList.innerHTML = '';
+            if (blockedApps.length === 0) {
+                appsList.innerHTML = '<div class="list-item">No blocked applications</div>';
+            } else {
+                blockedApps.forEach(app => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `
+                        <span>${app}</span>
+                        <button class="remove-btn" data-app="${app}">Remove</button>
+                    `;
+                    appsList.appendChild(item);
+                    
+                    // Add event listener to remove button
+                    item.querySelector('.remove-btn').addEventListener('click', () => {
+                        showPasswordDialog('removeApp', app);
+                    });
+                });
+            }
+            
+            // Update sites list
+            sitesList.innerHTML = '';
+            if (blockedSites.length === 0) {
+                sitesList.innerHTML = '<div class="list-item">No blocked websites</div>';
+            } else {
+                blockedSites.forEach(site => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `
+                        <span>${site}</span>
+                        <button class="remove-btn" data-site="${site}">Remove</button>
+                    `;
+                    sitesList.appendChild(item);
+                    
+                    // Add event listener to remove button
+                    item.querySelector('.remove-btn').addEventListener('click', () => {
+                        showPasswordDialog('removeSite', site);
+                    });
+                });
+            }
+            
+            // Clear inputs
+            appInput.value = '';
+            siteInput.value = '';
+        }
+
+        // Show password dialog
+        function showPasswordDialog(action, data = null) {
+            passwordAction = action;
+            passwordError.style.display = 'none';
+            passwordInput.value = '';
+            confirmPasswordInput.value = '';
+            
+            switch (action) {
+                case 'lock':
+                    passwordDialogTitle.textContent = 'Enter Password to Lock System';
+                    confirmPasswordInput.style.display = 'none';
+                    break;
+                case 'unlock':
+                    passwordDialogTitle.textContent = 'Enter Password to Unlock System';
+                    confirmPasswordInput.style.display = 'none';
+                    break;
+                case 'addApp':
+                    passwordDialogTitle.textContent = `Enter Password to Add Application: ${data}`;
+                    confirmPasswordInput.style.display = 'none';
+                    break;
+                case 'removeApp':
+                    passwordDialogTitle.textContent = `Enter Password to Remove Application: ${data}`;
+                    confirmPasswordInput.style.display = 'none';
+                    break;
+                case 'addSite':
+                    passwordDialogTitle.textContent = `Enter Password to Add Website: ${data}`;
+                    confirmPasswordInput.style.display = 'none';
+                    break;
+                case 'removeSite':
+                    passwordDialogTitle.textContent = `Enter Password to Remove Website: ${data}`;
+                    confirmPasswordInput.style.display = 'none';
+                    break;
+                case 'changePassword':
+                    passwordDialogTitle.textContent = 'Change Password';
+                    passwordInput.placeholder = 'Current Password';
+                    confirmPasswordInput.placeholder = 'New Password';
+                    confirmPasswordInput.style.display = 'block';
+                    break;
+            }
+            
+            passwordDialog.style.display = 'flex';
+            passwordInput.focus();
+            
+            // Store data for later use
+            passwordDialog.dataset.actionData = data;
+        }
+
+        // Hide password dialog
+        function hidePasswordDialog() {
+            passwordDialog.style.display = 'none';
+        }
+
+        // Handle password confirmation
+        async function handlePasswordConfirm() {
+            const password = passwordInput.value;
+            const actionData = passwordDialog.dataset.actionData;
+            
+            if (!password) {
+                showPasswordError('Password cannot be empty');
+                return;
+            }
+            
+            // For change password, check that new password is provided
+            if (passwordAction === 'changePassword') {
+                const newPassword = confirmPasswordInput.value;
+                if (!newPassword) {
+                    showPasswordError('Please enter a new password');
+                    return;
+                }
+            }
+            
+            // Disable the confirm button and show loading
+            confirmPasswordButton.disabled = true;
+            confirmPasswordButton.innerHTML = '<span class="loading"></span> Processing...';
+            
+            try {
+                let response;
+                
+                switch (passwordAction) {
+                    case 'lock':
+                        response = await fetch('/api/lock', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password })
+                        });
+                        break;
+                    case 'unlock':
+                        response = await fetch('/api/unlock', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password })
+                        });
+                        break;
+                    case 'addApp':
+                        response = await fetch('/api/apps', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                password,
+                                app_name: actionData
+                            })
+                        });
+                        break;
+                    case 'removeApp':
+                        response = await fetch(`/api/apps/${encodeURIComponent(actionData)}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password })
+                        });
+                        break;
+                    case 'addSite':
+                        response = await fetch('/api/sites', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                password,
+                                site_name: actionData
+                            })
+                        });
+                        break;
+                    case 'removeSite':
+                        response = await fetch(`/api/sites/${encodeURIComponent(actionData)}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password })
+                        });
+                        break;
+                    case 'changePassword':
+                        const newPassword = confirmPasswordInput.value;
+                        response = await fetch('/api/change-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                current_password: password,
+                                new_password: newPassword
+                            })
+                        });
+                        break;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    hidePasswordDialog();
+                    fetchStatus(); // Refresh the UI
+                    alert(result.message);
+                } else {
+                    showPasswordError(result.message || 'Operation failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showPasswordError('Connection error. Please try again.');
+            } finally {
+                // Re-enable the confirm button
+                confirmPasswordButton.disabled = false;
+                confirmPasswordButton.textContent = 'Confirm';
+            }
+        }
+
+        // Show password error
+        function showPasswordError(message) {
+            passwordError.textContent = message;
+            passwordError.style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

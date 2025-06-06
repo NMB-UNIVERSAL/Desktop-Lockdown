@@ -13,28 +13,17 @@ A simple application to lock down distracting apps and websites on Windows. This
 ## Requirements
 
 - Windows 10 or later
-- Python 3.7 or later
 - Administrator privileges (required for some features)
 
 ## Installation
 
-1. Make sure you have Python installed on your system
-2. Install the required packages:
-
-```
-pip install -r requirements.txt
-```
-
-3. Run the application with administrator privileges:
-
-```
-python main.py  # For desktop interface
-python server.py  # For remote control from mobile devices
-```
+download the latest release and run the setup_autostart.bat
 
 ## Usage
 
 ### Desktop Mode
+
+*Note: on ur device u wish to use as a controller, type this in the URL bar "<the ip of the desktop:5000>"
 
 1. **First Run**: On first run, you'll be prompted to set a password. Remember this password as it will be needed to unlock the system or exit when locked.
 
@@ -50,9 +39,9 @@ python server.py  # For remote control from mobile devices
 
 ### Remote Control Mode
 
-1. **Start the Server**: Run `python server.py` with administrator privileges to start the remote control server.
+1. **Start the Server**: Run `NubaidLockdown.exe` with administrator privileges to start the remote control server.
 
-2. **Connect from Mobile**: The server will display a URL (and optionally a QR code) that you can open on your mobile device's browser.
+2. **Connect from Mobile**: The server will display a URL(<the ip of the desktop:5000>) (and optionally a QR code) that you can open on your mobile device's browser.
 
 3. **Mobile Interface**: The mobile interface provides the same functionality as the desktop version:
    - Lock/unlock the system
